@@ -4,6 +4,7 @@ from flask_assets import Environment, Bundle
 from init_db import get_cursor
 import psycopg2
 import config
+import time
 
 app = Flask(__name__, static_url_path="/static", static_folder="static")
 app.config.from_object(config)
@@ -27,9 +28,8 @@ print(db_cursor.fetchone())
 db_cursor.execute("select version()")
 print(db_cursor.fetchone())
 
-USERNAME = ""
-PASSWORD = ""
-id = 101 
+app.secret_key = "wesleylewis123456"
+id = int(time.time())
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -40,9 +40,6 @@ def register():
         password = request.form["password"]
         email = request.form["email"]
 
-        # USERNAME = username
-        # PASSWORD = password
-
         db_cursor.execute("select * from user_data where username = %s", (username, ))
         user = db_cursor.fetchone()
         print("user:", user)
@@ -52,10 +49,11 @@ def register():
             db_cursor.execute("insert into user_data(id, username, password, email) values( %s, %s, %s, %s)", (id, username, password, email))
             id = id + 1
             db_conn.commit()
-            return "success"
+            return render_template("index.html")
     elif request.method == "POST":
-        msg = "register over here"
-    return render_template("register.html" ) 
+        print("Register")
+    print("render template")
+    return render_template("index.html" ) 
 
 @app.route("/")
 @app.route("/login", methods = ["GET", "POST"])
@@ -80,12 +78,15 @@ def login():
             session["id"] = user[0] 
             session["username"] = user[1]
             msg = "Logged in successfully"
-            return msg
+            return render_template("dashboard.html")
 
         else:
-            msg = "invalid credentials"
-    return render_template("index.html")
+            return "invalid credentials"
+    return render_template("register.html")
 
+@app.route("/google")
+def google():
+    return redirect("www.google.com")
 
 @app.route("/logout")
 def logout():
